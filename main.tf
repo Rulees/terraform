@@ -22,7 +22,7 @@ resource "yandex_vpc_subnet" "private" {
 }
 
 # Create disk and VM
-resource "yandex_compute_disk" "boot-disk" {
+resource "yandex_compute_disk" "boot_disk" {
   name     = local.boot_disk_name
   zone     = var.zone
   image_id = var.image_id
@@ -43,7 +43,7 @@ resource "yandex_compute_instance" "this" {
   }
 
   boot_disk {
-    disk_id = yandex_compute_disk.boot-disk.id
+    disk_id = yandex_compute_disk.boot_disk.id
   }
 
   network_interface {
@@ -52,7 +52,7 @@ resource "yandex_compute_instance" "this" {
 
   metadata = {
     foo      = "bar"
-    ssh-keys = "arkselen:${file("~/.ssh/YC.pub")}"
+    ssh_keys = "arkselen:${file("~/.ssh/YC.pub")}"
   }
 }
 
