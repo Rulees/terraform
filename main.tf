@@ -1,6 +1,17 @@
+# Add local values
+locals {
+  vpc_network_name    = "${var.name_prefix}-private"
+  boot_disk_name      = "${var.name_prefix}-boot-disk"
+  linux_vm_name       = "${var.name_prefix}-boot-disk"
+  ydb_serverless_name = "${var.name_prefix}-test-ydb-serverless"
+  bucket_sa_name      = "${var.name_prefix}-sa"
+  bucket_name         = "${var.name_prefix}-terraform-bucket-${random_string.bucket_name.result}"
+}
+
+
 # Create Virtual Private Cloud and subnetwork
 resource "yandex_vpc_network" "this" {
-  name = "${var.name_prefix}-private"
+  name = local.vpc_network_name
 }
 
 resource "yandex_vpc_subnet" "private" {
@@ -12,7 +23,7 @@ resource "yandex_vpc_subnet" "private" {
 
 # Create disk and VM
 resource "yandex_compute_disk" "boot-disk" {
-  name     = "${var.name_prefix}-boot-disk"
+  name     = local.boot_disk_name
   zone     = var.zone
   image_id = var.image_id
 
@@ -21,7 +32,7 @@ resource "yandex_compute_disk" "boot-disk" {
 }
 
 resource "yandex_compute_instance" "this" {
-  name                      = "${var.name_prefix}-linux-vm"
+  name                      = local.linux_vm_name
   allow_stopping_for_update = true
   platform_id               = var.instance_resources.platform_id
   zone                      = var.zone
@@ -47,12 +58,12 @@ resource "yandex_compute_instance" "this" {
 
 # Create Yandex Managed Service for YDB
 resource "yandex_ydb_database_serverless" "this" {
-  name = "${var.name_prefix}-test-ydb-serverless"
+  name = local.ydb_serverless_name
 }
 
 # Create service account
 resource "yandex_iam_service_account" "bucket" {
-  name = "${var.name_prefix}-sa"
+  name = local.bucket_sa_name
 }
 
 # Assign a role to a service account
@@ -70,7 +81,7 @@ resource "yandex_iam_service_account_static_access_key" "this" {
 
 # Create bucket
 resource "yandex_storage_bucket" "this" {
-  bucket     = "terraform-bucket-${random_string.bucket_name.result}"
+  bucket     = local.bucket_name
   access_key = yandex_iam_service_account_static_access_key.this.access_key
   secret_key = yandex_iam_service_account_static_access_key.this.secret_key
 
