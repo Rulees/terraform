@@ -1,31 +1,32 @@
 resource "yandex_vpc_network" "this" {
-  name = "private"
+  name = "${var.name_prefix}-private"
 }
 
 resource "yandex_vpc_subnet" "private" {
-  name           = "private"
-  zone           = "ru-central1-a"
-  v4_cidr_blocks = ["192.168.10.0/24"]
+  name           = keys(var.subnets)[0]
+  zone           = var.zone
+  v4_cidr_blocks = var.subnets[keys(var.subnets)[0]]
   network_id     = yandex_vpc_network.this.id
 }
 
 resource "yandex_compute_disk" "boot-disk" {
-  name     = "boot-disk"
-  type     = "network-hdd"
-  zone     = "ru-central1-a"
-  image_id = "fd8btqg2mh540ftne9p4"
-  size     = 15
+  name     = "${var.name_prefix}-boot-disk"
+  zone     = var.zone
+  image_id = var.image_id
+
+  type = var.instance_resources.disk.disk_type
+  size = var.instance_resources.disk.disk_size
 }
 
 resource "yandex_compute_instance" "this" {
-  name                      = "linux-vm"
+  name                      = "${var.name_prefix}-linux-vm"
   allow_stopping_for_update = true
-  platform_id               = "standard-v3"
-  zone                      = "ru-central1-a"
+  platform_id               = var.instance_resources.platform_id
+  zone                      = var.zone
 
   resources {
-    cores  = 4
-    memory = 8
+    cores  = var.instance_resources.cores
+    memory = var.instance_resources.memory
   }
 
   boot_disk {
@@ -43,15 +44,15 @@ resource "yandex_compute_instance" "this" {
 }
 
 resource "yandex_ydb_database_serverless" "this" {
-  name = "test-ydb-serverless"
+  name = "${var.name_prefix}-test-ydb-serverless"
 }
 
 resource "yandex_iam_service_account" "bucket" {
-  name = "bucket-sa"
+  name = "${var.name_prefix}-sa"
 }
 
 resource "yandex_resourcemanager_folder_iam_member" "storage_editor" {
-  folder_id = "b1g8a4ko3p44nba31fa7"
+  folder_id = var.folder_id
   role      = "storage.editor"
   member    = "serviceAccount:${yandex_iam_service_account.bucket.id}"
 }
@@ -74,24 +75,3 @@ resource "random_string" "bucket_name" {
   upper   = false
   special = false
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
