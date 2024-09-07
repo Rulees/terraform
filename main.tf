@@ -2,7 +2,7 @@
 locals {
   vpc_network_name    = "${var.name_prefix}-private"
   boot_disk_name      = "${var.name_prefix}-boot-disk"
-  linux_vm_name       = "${var.name_prefix}-boot-disk"
+  linux_vm_name       = "${var.name_prefix}-linux-vm"
   ydb_serverless_name = "${var.name_prefix}-test-ydb-serverless"
   bucket_sa_name      = "${var.name_prefix}-sa"
   bucket_name         = "${var.name_prefix}-terraform-bucket-${random_string.bucket_name.result}"
