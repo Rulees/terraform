@@ -39,3 +39,4 @@ terraform.rc
 .terraform.lock.hcl
 .vscode/
 **/update_token.sh
+**/html.sh.tpl
