@@ -48,5 +48,7 @@ variable "subnets" {
   type        = map(list(string))
   default = {
     "private-subnet" = ["192.168.10.0/24"],
+    "test-subnet-1"  = ["192.168.11.0/26"],
+    "test-subnet-2"  = ["192.168.15.0/29"],
   }
 }

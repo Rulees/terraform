@@ -6,6 +6,7 @@ locals {
   ydb_serverless_name = "${var.name_prefix}-test-ydb-serverless"
   bucket_sa_name      = "${var.name_prefix}-bucket-sa"
   bucket_name         = join("-", [var.name_prefix, "terraform", "bucket", random_string.bucket_name.result])
+  all_cidr_blocks     = flatten([for cidrs in var.subnets : cidrs])
 }
 
 
