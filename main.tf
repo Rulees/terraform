@@ -70,6 +70,11 @@ resource "yandex_compute_instance" "this" {
       bucket_domain_name = yandex_storage_bucket.this.bucket_domain_name
     })
   }
+
+  labels = {
+    cpu    = "${var.instance_resources.cores}_cores"
+    memory = "${var.instance_resources.memory}_gb"
+  }
 }
 
 # Create Yandex Managed Service for YDB
