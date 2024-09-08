@@ -1,10 +1,10 @@
-# Add local values
+# Local values
 locals {
   vpc_network_name    = "${var.name_prefix}-private"
   boot_disk_name      = "${var.name_prefix}-boot-disk"
   linux_vm_name       = "${var.name_prefix}-linux-vm"
   ydb_serverless_name = "${var.name_prefix}-test-ydb-serverless"
-  bucket_sa_name      = "${var.name_prefix}-sa"
+  bucket_sa_name      = "${var.name_prefix}-bucket-sa"
   bucket_name         = "${var.name_prefix}-terraform-bucket-${random_string.bucket_name.result}"
 }
 
@@ -19,6 +19,15 @@ resource "yandex_vpc_subnet" "private" {
   zone           = var.zone
   v4_cidr_blocks = var.subnets[keys(var.subnets)[0]]
   network_id     = yandex_vpc_network.this.id
+}
+
+# Create public address for instance
+resource "yandex_vpc_address" "this" {
+  name = "${local.linux_vm_name}-address"
+
+  external_ipv4_address {
+    zone_id = var.zone
+  }
 }
 
 # Create disk and VM
@@ -47,12 +56,18 @@ resource "yandex_compute_instance" "this" {
   }
 
   network_interface {
-    subnet_id = yandex_vpc_subnet.private.id
+    subnet_id      = yandex_vpc_subnet.private.id
+    nat            = true
+    nat_ip_address = yandex_vpc_address.this.external_ipv4_address[0].address
   }
 
   metadata = {
     foo      = "bar"
     ssh_keys = "arkselen:${file("~/.ssh/YC.pub")}"
+    user-data = templatefile("cloud-init.yaml.tpl", {
+      ydb_connect_string = yandex_ydb_database_serverless.this.ydb_full_endpoint,
+      bucket_domain_name = yandex_storage_bucket.this.bucket_domain_name
+    })
   }
 }
 
