@@ -1,0 +1,42 @@
+version: 2.1
+
+executors:
+  terraform-executor:
+    docker:
+      - image: hashicorp/terraform:light
+    working_directory: ~/repo
+
+jobs:
+  terraform:
+    executor: terraform-executor
+    steps:
+      - checkout
+
+      # Step 1: Setup Terraform environment
+      - run:
+          name: Setup Terraform
+          command: |
+            terraform init
+
+      # Step 2: Apply Terraform (create infrastructure)
+      - run:
+          name: Apply Terraform
+          command: |
+            terraform apply -auto-approve
+
+      # Step 3: Print "hello"
+      - run:
+          name: Print Hello
+          command: echo "Hello, Terraform!"
+
+      # Step 4: Destroy Terraform (destroy infrastructure)
+      - run:
+          name: Destroy Terraform
+          command: |
+            terraform destroy -auto-approve
+
+workflows:
+  version: 2
+  terraform_workflow:
+    jobs:
+      - terraform
