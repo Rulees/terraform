@@ -42,7 +42,10 @@ resource "yandex_compute_disk" "boot_disk" {
 }
 
 resource "yandex_compute_instance" "this" {
-  name                      = local.linux_vm_name
+  for_each = var.instances
+
+  name = each.value
+  # name                      = local.linux_vm_name
   allow_stopping_for_update = true
   platform_id               = var.instance_resources.platform_id
   zone                      = var.zone
@@ -65,7 +68,7 @@ resource "yandex_compute_instance" "this" {
   metadata = {
     foo      = "bar"
     ssh_keys = "arkselen:${file("~/.ssh/YC.pub")}"
-    user-data = templatefile("cloud-init.yaml.tpl", {
+    user-data = templatefile("cloud-init.yml", {
       ydb_connect_string = yandex_ydb_database_serverless.this.ydb_full_endpoint,
       bucket_domain_name = yandex_storage_bucket.this.bucket_domain_name
     })

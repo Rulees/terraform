@@ -3,10 +3,10 @@ output "boot_disk_id" {
   value       = yandex_compute_disk.boot_disk.id
 }
 
-output "instance_id" {
-  description = "The ID of the Yandex Compute instance."
-  value       = yandex_compute_instance.this.id
-}
+# output "instance_id" {
+#   description = "The ID of the Yandex Compute instance."
+#   value       = yandex_compute_instance.this.id
+# }
 
 output "subnet_id" {
   description = "The ID of the VPC subnet used by the Yandex Compute instance."
@@ -34,11 +34,17 @@ output "access_key" {
   sensitive   = true
 }
 
-output "instance_public_ip_address" {
-  description = "The external IP address of the instance."
-  value       = yandex_compute_instance.this.network_interface.0.nat_ip_address
+# output "instance_public_ip_address" {
+#   description = "The external IP address of the instance."
+#   value       = yandex_compute_instance.this.network_interface.0.nat_ip_address
+# }
+
+# output "instance_labels" {
+#   value = yandex_compute_instance.this.labels
+# }
+
+# Вывод, чтобы показать имена экземпляров
+output "instance_names" {
+  value = [for key, value in var.instance_map : value]
 }
 
-output "instance_labels" {
-  value = yandex_compute_instance.this.labels
-}

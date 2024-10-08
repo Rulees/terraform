@@ -52,3 +52,17 @@ variable "subnets" {
     "test-subnet-2"  = ["192.168.15.0/29"],
   }
 }
+
+variable "env" {
+    default = "prod"
+  }
+
+# Создание переменной с уникальными ключами для каждого экземпляра
+variable "instances" {
+  default = {
+	  "web" = "web-server",
+	  "app" = "application-server",
+	  "db"  = "database",
+    "sex" = "sex-machine"
+	}
+}
