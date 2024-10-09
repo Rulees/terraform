@@ -6,6 +6,9 @@ terraform {
     random = {
       source = "hashicorp/random"
     }
+    time = {
+      source = "hashicorp/time"
+    }
   }
   required_version = ">= 1.00"
 }
@@ -16,4 +19,7 @@ provider "yandex" {
 }
 
 provider "random" {
+}
+
+provider "time" {
 }
