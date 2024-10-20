@@ -60,7 +60,7 @@ variable "instance_resources" {
       - `memory`: The amount of memory (in GiB) allocated to the instance.
       - `disk`: Configuration for the instance disk.
         - `disk_type`: The type of disk for the instance. If not provided, it defaults to `network-ssd`.
-        - `disk_size`: The size of the disk (in GiB) allocated to the instance. If not provided, it defaults to 15 GiB."
+        - `disk_size`: The size of the disk (in GiB) allocated to the instance. If not provided, it defaults to 15 GiB.
   EOF
 
   type = object({

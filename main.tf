@@ -20,16 +20,6 @@ resource "yandex_compute_disk" "boot_disk" {
   size = var.instance_resources.disk.disk_size
 }
 
-# Create snapshots of boot disks through 120s after launching
-resource "yandex_compute_snapshot" "initial" {
-  for_each = yandex_compute_disk.boot_disk
-
-  name           = "${each.value.name}-initial"
-  source_disk_id = each.value.id
-
-  depends_on = [time_sleep.wait_120_seconds]
-}
-
 # Create additional disks [HDD]
 resource "yandex_compute_disk" "secondary_disk_a" {
   count = contains(var.zones, "ru-central1-a") ? var.secondary_disks.count : 0  # if var.zones contains "zone-a", then use var.second...=2
@@ -94,15 +84,9 @@ resource "yandex_compute_instance" "this" {
   metadata = {
     user-data = templatefile("cloud-init.yml", {
       ydb_connect_string = yandex_ydb_database_serverless.this.ydb_full_endpoint,
-      bucket_domain_name = yandex_storage_bucket.this.bucket_domain_name
+      bucket_domain_name = module.s3.bucket_domain_name
     })
   }
-}
-
-resource "time_sleep" "wait_120_seconds" {
-  create_duration = "120s"
-
-  depends_on = [yandex_compute_instance.this]
 }
 
 # Создание VPC и подсети
@@ -133,32 +117,11 @@ resource "yandex_ydb_database_serverless" "this" {
   name = local.ydb_serverless_name
 }
 
-# Создание сервисного аккаунта 
-resource "yandex_iam_service_account" "bucket" {
-  name = local.bucket_sa_name
-}
+module "s3" {
+  source = "github.com/terraform-yc-modules/terraform-yc-s3.git?ref=9fc2f832875aefb6051a2aa47b5ecc9a7ea8fde5" # Commit hash for 1.0.2
 
-# Назначение роли сервисному аккаунту
-resource "yandex_resourcemanager_folder_iam_member" "storage_editor" {
-  folder_id = var.folder_id
-  role      = "storage.editor"
-  member    = "serviceAccount:${yandex_iam_service_account.bucket.id}"
-}
-
-# Создание статического ключа доступа
-resource "yandex_iam_service_account_static_access_key" "this" {
-  service_account_id = yandex_iam_service_account.bucket.id
-  description        = "static access key for object storage"
-}
-
-# Создание бакета 
-resource "yandex_storage_bucket" "this" {
-  bucket     = local.bucket_name
-  access_key = yandex_iam_service_account_static_access_key.this.access_key
-  secret_key = yandex_iam_service_account_static_access_key.this.secret_key
-  
-  depends_on = [ yandex_resourcemanager_folder_iam_member.storage_editor ]
-}
+  bucket_name = local.bucket_name
+} 
 
 resource "random_string" "bucket_name" {
   length  = 8
