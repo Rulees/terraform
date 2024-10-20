@@ -75,11 +75,14 @@ resource "yandex_compute_instance" "this" {
     }
   }
 
-  network_interface {
-    subnet_id      = yandex_vpc_subnet.private[each.value].id
+   network_interface {
+    subnet_id = {
+      for subnet in module.net.public_subnets :
+      subnet.zone => subnet.subnet_id
+    }[each.value]
     nat            = true
     nat_ip_address = yandex_vpc_address.this[each.value].external_ipv4_address[0].address
-  }
+  } 
 
   metadata = {
     user-data = templatefile("cloud-init.yml", {
@@ -87,20 +90,6 @@ resource "yandex_compute_instance" "this" {
       bucket_domain_name = module.s3.bucket_domain_name
     })
   }
-}
-
-# Создание VPC и подсети
-resource "yandex_vpc_network" "this" {
-  name = local.vpc_network_name
-}
-
-resource "yandex_vpc_subnet" "private" {
-  for_each = var.zones
-
-  name           = keys(var.subnets)[index(tolist(var.zones), each.value)]
-  zone           = each.value
-  v4_cidr_blocks = var.subnets[each.value]
-  network_id     = yandex_vpc_network.this.id
 }
 
 resource "yandex_vpc_address" "this" {
@@ -112,11 +101,29 @@ resource "yandex_vpc_address" "this" {
   }
 }
 
+# Создание сети и подсетей
+module "net" {
+  source = "github.com/terraform-yc-modules/terraform-yc-vpc.git?ref=19a9893f25b2536cea3c9c15c180c905ea37bf9c" # Commit hash for 1.0.7
+
+  network_name = local.vpc_network_name
+  create_sg    = false
+
+  public_subnets = [
+    for zone in var.zones :
+    {
+      v4_cidr_blocks = var.subnets[zone]
+      zone           = zone
+      name           = zone
+    }
+  ]
+}
+
 # Создание Yandex Managed Service for YDB
 resource "yandex_ydb_database_serverless" "this" {
   name = local.ydb_serverless_name
 }
 
+# Создание объектного хранилища
 module "s3" {
   source = "github.com/terraform-yc-modules/terraform-yc-s3.git?ref=9fc2f832875aefb6051a2aa47b5ecc9a7ea8fde5" # Commit hash for 1.0.2
 

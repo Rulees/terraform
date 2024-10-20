@@ -35,8 +35,8 @@ output "instance_public_ip_addresses" {
 output "subnet_ids" {
   description = "The IDs of the VPC subnets used by the Yandex Compute instances."
   value = {
-    for subnet in yandex_vpc_subnet.private :
-    subnet.name => subnet.id
+    for cidr_block, subnet_info in module.net.public_subnets :
+    subnet_info.name => subnet_info.subnet_id
   }
 }
 
