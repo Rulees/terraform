@@ -92,6 +92,12 @@ resource "yandex_compute_instance" "this" {
   }
 }
 
+resource "time_sleep" "this" {
+  create_duration = "180s"
+
+  depends_on = [ yandex_compute_instance.this ]
+}
+
 resource "yandex_vpc_address" "this" {
   for_each = var.zones
 
@@ -134,4 +140,14 @@ resource "random_string" "bucket_name" {
   length  = 8
   special = false
   upper   = false
+}
+
+resource "terraform_data" "get_serial_output" {
+  for_each = yandex_compute_instance.this
+
+  provisioner "local-exec" {
+    command = "yc compute instance get-serial-port-output --id ${each.value.id} --folder-id ${var.folder_id} > serial_output_${each.value.name}.txt"
+  }
+
+  depends_on = [ time_sleep.this ]
 }

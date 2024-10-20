@@ -54,3 +54,11 @@ output "bucket_name" {
   description = "The name of the Yandex Object Storage bucket."
   value       = module.s3.bucket_name
 }
+
+output "serial_port_files" {
+  description = "The Serial port's output files."
+  value = [
+    for instance in yandex_compute_instance.this :
+    "serial_output_${instance.name}.txt"
+  ]
+}
